@@ -39,6 +39,40 @@ resource "aws_instance" "instance_2" {
 
 }
 
+resource "aws_security_group" "allow_8080" {
+  name        = "allow_8080"
+  description = "Allow tcp 8080 inbound traffic"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description      = "TLS from VPC"
+    from_port        = 8080
+    to_port          = 8080
+    protocol         = "tcp"
+    cidr_blocks      = ["10.0.2.0/24"]
+    # cidr_blocks      = [aws_vpc.main.cidr_block]
+    # ipv6_cidr_blocks = [aws_vpc.main.ipv6_cidr_block]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    # ipv6_cidr_blocks = ["::/0"]
+  }
+
+  # tags = {
+  #   Name = "allow_tls"
+  # }
+}
+
+#Definir el VPC
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
 #definir las subnets publicas y privadas
 
 resource "aws_subnet" "private" {
@@ -94,15 +128,15 @@ resource "aws_lb_target_group" "albtg" {
   target_type = "instance"
   vpc_id   = aws_vpc.main.id
 
-  health_check {
-    path                = "/"
-    protocol            = "HTTP"
-    matcher             = "200"
-    interval            = 15
-    timeout             = 3
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
+  # health_check {
+  #   path                = "/"
+  #   protocol            = "HTTP"
+  #   matcher             = "200"
+  #   interval            = 15
+  #   timeout             = 3
+  #   healthy_threshold   = 2
+  #   unhealthy_threshold = 2
+  # }
 }
 
 #attachar cada instancia al target group
@@ -156,41 +190,6 @@ resource "aws_security_group" "instances" {
 }
 
 
-resource "aws_security_group" "allow_8080" {
-  name        = "allow_8080"
-  description = "Allow tcp 8080 inbound traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description      = "TLS from VPC"
-    from_port        = 8080
-    to_port          = 8080
-    protocol         = "tcp"
-    cidr_blocks      = ["10.0.2.0/24"]
-    # cidr_blocks      = [aws_vpc.main.cidr_block]
-    # ipv6_cidr_blocks = [aws_vpc.main.ipv6_cidr_block]
-  }
-
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    # ipv6_cidr_blocks = ["::/0"]
-  }
-
-  # tags = {
-  #   Name = "allow_tls"
-  # }
-}
-
-
-
-
-
-
-
-
 # Bloques de data que hacen referencia a cosas que ya existen
 # Se usan los default vpc y subnets
 
@@ -202,8 +201,3 @@ resource "aws_security_group" "allow_8080" {
 #   vpc_id = data.aws_vpc.default_vpc.id
 # }
 
-#Definir el VPC
-
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-}
